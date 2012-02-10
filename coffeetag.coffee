@@ -31,7 +31,6 @@ class InputTag
     @inputElem.removeEventListener 'keyup' #unless !@inputElem.hasEventListener 'keyup'
 
   onKeyUp: (e) ->
-    console.log 'onKeyUp: ', e.keyCode
     switch e.keyCode
       when 13  # return
         @createTagFromCurrentInput()
