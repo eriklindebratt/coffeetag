@@ -76,7 +76,6 @@ class @InputTag
     @deleteTagElem @getTags()[index]
 
   deleteTagElem: (tagElem, triggeredFromBackspace=false) ->
-    console.log tagElem
     return unless tagElem
     @tagContainerElem.removeChild tagElem
     @tagElementsDidChange()
