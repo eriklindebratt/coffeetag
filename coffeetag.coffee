@@ -4,6 +4,9 @@ class @InputTag
     $(elements).each (i, c) =>
       new InputTag c
 
+  # @param boolean dismissReturnKeyPress  Set to true when hooking up to external script.
+  #                                       This disables the creation of the tag element from in
+  #                                       here, and relies on it being created from elsewhere.
   constructor: (@containerElem, @dismissReturnKeyPress) ->
     return unless @containerElem?
 
@@ -17,6 +20,8 @@ class @InputTag
     else
       @tagElemType = 'span'
     @tagElemClassName = 'tag js-tag'
+
+    @tagElementsDidChange()
 
     @containerElem.addEventListener 'click', (e) => @onContainerElemClick
     #@inputElem.addEventListener 'focus', (e) => @onInputFocus e
@@ -42,19 +47,19 @@ class @InputTag
         @createTagFromCurrentInput()
       when 8  # backspace
         if @inputElem.value is '' and @getTags().length
-          @deleteLastTag()
+          @deleteLastTag true unless document.getSelection().type.toLowerCase() is 'range'
 
   createTagFromCurrentInput: ->
     return unless @inputElem.value
     @addTagElementWithText @inputElem.value
     @inputElem.value = ''
 
-
   addTagElementWithText: (text) ->
     tagElem = document.createElement @tagElemType
     tagElem.className = @tagElemClassName
 
     # style tag
+    # TODO: remove this...
     tagElem.style.border = '1px red solid'
     tagElem.style.backgroundColor = 'yellow'
     tagElem.style.padding = '0.1em 0.6em'
@@ -65,25 +70,40 @@ class @InputTag
 
   addExistingTagElement: (tagElem) ->
     @tagContainerElem.appendChild tagElem
-    allTags = @getTags()
-    tagElemWidth = $(tagElem).width()
-    tagElemWidth += parseInt($(tagElem).css('padding-left'), 10) + parseInt($(tagElem).css('padding-right'), 10)
-    if allTags.length > 1
-      tagElemWidth += parseInt($(allTags[0]).css('margin-left'), 10) + parseInt($(allTags[0]).css('margin-right'), 10)
-    $(@inputElem).css('width', ($(@inputElem).width() - tagElemWidth)+'px !important')
+    @tagElementsDidChange()
 
   deleteTagElemAtIndex: (index) ->
-    deleteTagElem @getTags()[index]
+    @deleteTagElem @getTags()[index]
 
-  deleteTagElem: (tagElem) ->
-    @inputElem.value = tagElem.innerText.slice 0, -1
-    $(@inputElem).css('width', ($(@inputElem).width()+$(tagElem).width())+'px !important')
+  deleteTagElem: (tagElem, triggeredFromBackspace=false) ->
+    console.log tagElem
+    return unless tagElem
     @tagContainerElem.removeChild tagElem
+    @tagElementsDidChange()
+    if triggeredFromBackspace
+      @inputElem.value = tagElem.innerText.slice 0, -1
 
-  deleteLastTag: () ->
+  deleteLastTag: (triggeredFromBackspace=false) ->
     tags = @getTags()
     return unless tags.length
-    @deleteTagElem tags[tags.length-1]
+    @deleteTagElem tags[tags.length-1], triggeredFromBackspace
 
-  getTags: () ->
+  # when the tag elements have changed (a tag was added or removed)
+  tagElementsDidChange: ->
+    tags = @getTags()
+    return unless tags.length > 0
+
+    totalTagElemsWidth = 0
+    for tagElem in tags
+      totalTagElemsWidth += $(tagElem).width()
+      totalTagElemsWidth += parseInt($(tagElem).css('padding-left'), 10) + parseInt($(tagElem).css('padding-right'), 10)
+    if tags.length > 1
+      totalTagElemsWidth += (parseInt($(tags[0]).css('margin-left'), 10) + parseInt($(tags[0]).css('margin-right'), 10)) * (tags.length-1)
+
+    if tags.length
+      $(@inputElem).css('width', ($(@inputElem).width() - totalTagElemsWidth)+'px !important')
+    else
+      $(@inputElem).css('width', '100% !important').focus()
+
+  getTags: ->
     @tagContainerElem.getElementsByTagName @tagElemType
