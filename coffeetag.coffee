@@ -4,10 +4,7 @@ class @InputTag
     $(elements).each (i, c) =>
       new InputTag c
 
-  # @param boolean dismissReturnKeyPress  Set to true when hooking up to external script.
-  #                                       This disables the creation of the tag element from in
-  #                                       here, and relies on it being created from elsewhere.
-  constructor: (@containerElem, @dismissReturnKeyPress) ->
+  constructor: (@containerElem, @dismissReturnKeyPress, @createTagsUsingOutsideFunction, @onTagRemovalCallback) ->
     return unless @containerElem?
 
     @inputElem = $(@containerElem).find('input[type=text], input[type=search], input[type=email], input[type=number]')[0]
@@ -41,29 +38,30 @@ class @InputTag
   onKeyUp: (e) ->
     switch e.keyCode
       when 13  # return
-        @createTagFromCurrentInput() unless @dismissReturnKeyPress
+        e.preventDefault()
+        @createTagFromCurrentInput() unless @dismissReturnKeyPress?
+        false
       when 9  # tab
         e.preventDefault()
         @createTagFromCurrentInput()
       when 8  # backspace
+        return # temporarily disabling backspace support for now. TODO: fix this
         if @inputElem.value is '' and @getTags().length
           @deleteLastTag true unless document.getSelection().type.toLowerCase() is 'range'
 
   createTagFromCurrentInput: ->
-    return unless @inputElem.value
-    @addTagElementWithText @inputElem.value
+    tagText = @inputElem.value
     @inputElem.value = ''
+    return unless tagText?
+
+    if @createTagsUsingOutsideFunction?
+      @createTagsUsingOutsideFunction tagText
+    else
+      @addTagElementWithText tagText
 
   addTagElementWithText: (text) ->
     tagElem = document.createElement @tagElemType
     tagElem.className = @tagElemClassName
-
-    # style tag
-    # TODO: remove this...
-    tagElem.style.border = '1px red solid'
-    tagElem.style.backgroundColor = 'yellow'
-    tagElem.style.padding = '0.1em 0.6em'
-    tagElem.style.borderRadius = '10px'
 
     tagElem.innerText = @inputElem.value
     @addExistingTagElement tagElem
