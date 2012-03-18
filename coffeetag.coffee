@@ -62,6 +62,8 @@ class @InputTag
       @addTagElementWithText tagText
 
   addTagElementWithText: (text) ->
+    return unless text?
+
     tagElem = document.createElement @tagElemType
     tagElem.className = @tagElemClassName
 
@@ -69,6 +71,8 @@ class @InputTag
     @addExistingTagElement tagElem
 
   addExistingTagElement: (tagElem) ->
+    return unless $(tagElem).text()
+
     $(tagElem).insertBefore @$inputElem
     @tagElementsDidChange()
 
