@@ -94,24 +94,23 @@ class @InputTag
   # when the tag elements have changed (i.e. when a tag was added or removed)
   tagElementsDidChange: ->
     tags = @getTags()
-    return unless tags.length > 0
+    if tags.length > 0
+      inputElemWidthDiff = 0
+      breakRow = false
+      for tagElem in tags
+        inputElemWidthDiff += @tagElemWidth(tagElem) + 8
+        if inputElemWidthDiff > (@maxInputElemWidth() - @minInputElemWidth)
+          inputElemWidthDiff = 0
+          breakRow = true
+        else
+          breakRow = false
 
-    inputElemWidthDiff = 0
-    breakRow = false
-    for tagElem in tags
-      inputElemWidthDiff += @tagElemWidth(tagElem) + 8
-      if inputElemWidthDiff > (@maxInputElemWidth() - @minInputElemWidth)
-        inputElemWidthDiff = 0
-        breakRow = true
+      newInputElemWidth = @maxInputElemWidth() - inputElemWidthDiff
+      if !breakRow and newInputElemWidth
+        @$inputElem.css 'width', (newInputElemWidth-5)+'px'
+        @totalTagElemsWidth = newInputElemWidth
       else
-        breakRow = false
-
-    newInputElemWidth = @maxInputElemWidth() - inputElemWidthDiff
-    if !breakRow and newInputElemWidth
-      @$inputElem.css 'width', (newInputElemWidth-5)+'px'
-      @totalTagElemsWidth = newInputElemWidth
-    else
-      @$inputElem.css 'width', '100% !important'
+        @$inputElem.css 'width', '100% !important'
 
     @$containerElem.addClass 'ready'
     @$inputElem.removeAttr 'disabled'
