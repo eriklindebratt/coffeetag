@@ -72,6 +72,7 @@ class @InputTag
 
   addExistingTagElement: (tagElem) ->
     return unless $(tagElem).text()
+    return if @getTag($(tagElem).text())
 
     $(tagElem).insertBefore @$inputElem
     @tagElementsDidChange()
@@ -129,6 +130,13 @@ class @InputTag
 
   includePaddingInSizeCalculations: (forElem) ->
     $(forElem).css('box-sizing') isnt 'border-box'
+
+  getTag: (text) ->
+    tags = @getTags()
+    for tag in tags
+      if $.trim($(tag).text()) == text.toLowerCase()
+        return tag
+    return null
 
   getTags: ->
     @$containerElem.find @tagElemIdentifier
