@@ -26,6 +26,7 @@ class @InputTag
     #@$inputElem.on 'focus', (e) => @onInputFocus e
     #@$inputElem.on 'blur', (e) => @onInputBlur
     @$inputElem.on 'keyup', (e) => @onKeyUp e
+    @$inputElem.on 'keydown', (e) => @onKeyDown e
 
   onContainerElemClick: (e) ->
     e.stopPropagation()
@@ -46,10 +47,13 @@ class @InputTag
       when 9  # tab
         e.preventDefault()
         @createTagFromCurrentInput()
+
+
+  onKeyDown: (e) ->
+    switch e.keyCode
       when 8  # backspace
-        return # temporarily disabling backspace support for now. TODO: fix this
-        if @$inputElem.value is '' and @getTags().length
-          @deleteLastTag true unless document.getSelection().type.toLowerCase() is 'range'
+        if @$inputElem.val() is '' and @getTags().length
+          @deleteLastTag(true) unless document.getSelection().type.toLowerCase() is 'range'
 
   createTagFromCurrentInput: ->
     tagText = @$inputElem.val()
@@ -84,8 +88,9 @@ class @InputTag
     return unless tagElem
     $(tagElem).remove()
     @tagElementsDidChange()
-    if triggeredFromBackspace
-      @$inputElem.val tagElem.innerText.slice(0, -1)
+
+    #if triggeredFromBackspace
+    #@$inputElem.val($.trim(tagElem.innerText))
 
   deleteLastTag: (triggeredFromBackspace=false) ->
     tags = @getTags()
@@ -115,6 +120,7 @@ class @InputTag
 
     @$containerElem.addClass 'ready'
     @$inputElem.removeAttr 'disabled'
+    @$inputElem.focus()
 
   maxInputElemWidth: ->
     maxInputElemWidth = @$containerElem.width()
